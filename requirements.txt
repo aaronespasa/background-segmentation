@@ -1,0 +1,8 @@
+opencv-python
+albumentations
+tqdm
+requests
+matplotlib
+seaborn
+wandb
+segmentation_models_pytorch
