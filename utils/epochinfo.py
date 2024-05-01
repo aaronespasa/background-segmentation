@@ -1,3 +1,5 @@
+from callbacks import show_model_output
+
 def get_trajectory_emoji(array):
     """Get the emoji for the trajectory."""
     if len(array) < 2:
