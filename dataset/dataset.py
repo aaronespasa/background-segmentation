@@ -26,7 +26,7 @@ class TeethDataset(Dataset):
     PyTorch Teeth dataset.
     """
 
-    def __init__(self, root_dir:str, split:str, transform:bool=True, image_height=256, image_width=256):
+    def __init__(self, root_dir:str, split:str, transform:bool=True, image_height=512, image_width=256):
         """
         :param root_dir (string): Directory with all the images.
         :param transform (callable, optional): Optional transform to be applied on a sample.
@@ -50,26 +50,25 @@ class TeethDataset(Dataset):
         mean: [0.5394, 0.4728, 0.4129] & std: [0.0035, 0.0037, 0.0042]
         """
         return A.Compose([
-            A.Resize(self.image_height, self.image_width),
-            A.ShiftScaleRotate(shift_limit=0.2, scale_limit=0.2, rotate_limit=10, p=0.5),
+            A.Resize(self.image_width, self.image_height),
+            A.ShiftScaleRotate(shift_limit=0, scale_limit=-0.4, rotate_limit=0, p=0.5),
             A.HorizontalFlip(p=0.5),
-            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.2),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=1),
             A.GaussianBlur(p=0.2),
-            A.CLAHE(p=0.1),
             ToTensorV2()
         ])
 
     def get_val_transformations(self):
         """Get validation transformations for data augmentation."""
         return A.Compose([
-            A.Resize(self.image_height, self.image_width),
+            A.Resize(self.image_width, self.image_height),
             ToTensorV2()
         ])
 
     def _read_image(self, image_name:str):
         """Returns the image as a numpy array in black and white format."""
         image_path = os.path.join(self.images_dir, image_name + ".jpg")
-        image = np.array(Image.open(image_path).convert("L"), dtype=np.float32)
+        image = np.array(Image.open(image_path).convert("L"))
         return image
 
     def _read_mask(self, image_name:str):
@@ -84,20 +83,21 @@ class TeethDataset(Dataset):
     def __getitem__(self, index):
         image_name = self.files[index]
         image, mask = self._read_image(image_name), self._read_mask(image_name)
-        
+
         if self.transform:
             transformed = self.transformation(image=image, mask=mask)
-            image, mask, edge = transformed["image"], transformed["mask"]
+            image, mask = transformed["image"], transformed["mask"]
         
+        image = image.squeeze()
         image = image.float() / 255.0
-        mask = mask.float().unsqueeze(0) / 255.0
+        mask = mask.float() / 255.0
 
-        return image, mask, edge
+        return image, mask
 
 if __name__ == "__main__":
     DATA_FOLDER = "data"
     
-    train_dataset = TeethDataset(DATA_FOLDER, "training", True)
+    train_dataset = TeethDataset(DATA_FOLDER, "training", True, image_height=512, image_width=256)
 
     # print the shape of a random image and its mask
     image, mask = train_dataset[1]
