@@ -13,14 +13,13 @@ class IoULoss(nn.Module):
         """Inherits from the nn.Module class."""
         super().__init__()
 
-    def forward(self, inputs: torch.Tensor, targets: torch.Tensor, smooth: float=1e-6,
-                sigmoid: bool=True) -> torch.Tensor:
+    def forward(self, inputs: torch.Tensor, targets: torch.Tensor, smooth: float=1e-6, softmax: bool=True) -> torch.Tensor:
         """
         Args:
             inputs: (torch.Tensor) Predicted segmentation mask.
             targets: (torch.Tensor) Ground truth segmentation mask.
             smooth: (float) Smoothing parameter for the IoU loss (to avoid division by zero).
-            sigmoid: (bool) True if you want to apply the sigmoid function to the inputs before processing.
+            softmax: (bool) True if you want to apply the softmax function to the inputs before processing.
         
         Returns:
             loss: (torch.Tensor) IoU loss.
@@ -31,9 +30,9 @@ class IoULoss(nn.Module):
         assert inputs.device == targets.device, "Inputs and targets must be in the same device."
 
         with torch.no_grad():
-            if sigmoid:
-                inputs = torch.sigmoid(inputs)
-                inputs = (inputs > 0.5).float()
+            if softmax:
+                inputs = torch.softmax(inputs)
+                # TODO: Use 32 classes
 
             # Flatten the input and target tensors (matrix -> array)
             inputs = inputs.view(-1)

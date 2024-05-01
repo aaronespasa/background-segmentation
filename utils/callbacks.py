@@ -1,9 +1,8 @@
 import torch
 import os
 import matplotlib.pyplot as plt
-from .samples import get_sample
-from .constants import CHECKPOINTS_FOLDER
 from typing import TypedDict, Union
+from .samples import get_sample
 
 class OptData(TypedDict):
     images: torch.Tensor
@@ -14,29 +13,24 @@ class OptData(TypedDict):
 def convert_to_plotimg(img: torch.Tensor) -> torch.Tensor:
     return img.permute(1, 2, 0).cpu().detach().numpy()
 
-def show_model_output(model, wandb, wandb_table, filename="ADE_val_00000034", show_edge=False, device="cuda", opt_data:Union[OptData,None]=None, enhanced_net_model=None, model_is_magicwall=False, epoch_val=0):
+def show_model_output(model, wandb, wandb_table, filename="1", device="cuda", opt_data:Union[OptData,None]=None, epoch_val=0):
     if opt_data is not None:
-        image, mask, edge = opt_data["images"][0], opt_data["masks"][0], opt_data["edges"][0]
-        plot_image, plot_mask, plot_edge = convert_to_plotimg(image), convert_to_plotimg(mask), convert_to_plotimg(edge)
-        image, mask, edge = image.unsqueeze(0), mask.unsqueeze(0), edge.unsqueeze(0)
+        image, mask = opt_data["images"][0], opt_data["masks"][0]
+        plot_image, plot_mask = convert_to_plotimg(image), convert_to_plotimg(mask)
+        image, mask = image.unsqueeze(0), mask.unsqueeze(0)
     else:
-        plot_image, plot_mask, plot_edge, image, mask, edge = get_sample(filename, device=device)
+        plot_image, plot_mask, image, mask = get_sample(filename, device=device)
     
     model.eval()
     with torch.no_grad():
         output = model(image)
-        if model_is_magicwall:
-            output, _ = output
-            # segmentation_map, _ = output
-            # enhanced_model_input = torch.cat((image, segmentation_map), dim=1)
-            # output = enhanced_net_model(enhanced_model_input)
 
         output = torch.sigmoid(output)
         output = (output > 0.5).float()
         output = output[0].squeeze().detach().cpu().numpy()
 
-        imgs = [plot_image, plot_mask] + ([plot_edge] if show_edge else []) + [output]
-        titles = ["Image", "Mask"] + (["Edge"] if show_edge else []) + ["Prediction"]
+        imgs = [plot_image, plot_mask, output]
+        titles = ["Image", "Mask", "Prediction"]
         
         # Convert images to the format expected by WandB
         wandb_imgs = [wandb.Image(np_img, caption=title) for np_img, title in zip(imgs, titles)]
@@ -51,10 +45,10 @@ def show_model_output(model, wandb, wandb_table, filename="ADE_val_00000034", sh
             ax.imshow(img, cmap='gray' if title != "Image" else None)
         plt.show()
 
-def save_model(model, epoch, dice_score, model_name="UNet"):
-    if not os.path.exists(CHECKPOINTS_FOLDER):
-        os.mkdir(CHECKPOINTS_FOLDER)
-    torch.save(model.state_dict(), f"{CHECKPOINTS_FOLDER}/{model_name}_epoch_{epoch}_dice_{(dice_score*100):.2f}%.pth")
+def save_model(model, epoch, iou_score, model_name="UNet"):
+    if not os.path.exists("checkpoints"):
+        os.mkdir("checkpoints")
+    torch.save(model.state_dict(), f"checkpoints/{model_name}_epoch_{epoch}_iou_{(iou_score*100):.2f}%.pth")
 
 def early_stopping(val_loss, min_loss, not_improved, patience=7):
     """Return True if the validation loss didn't improve for the last `patience` epochs."""

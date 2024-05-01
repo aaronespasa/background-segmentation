@@ -13,12 +13,10 @@ import wandb
 
 from .callbacks import save_model, early_stopping
 from .epochinfo import log_epoch_info
-from .diceloss import DiceLoss
 from .iouloss import IoULoss
-from .metrics import plot_metrics
 from .onebatch import train_one_batch
 
-def train_fn(train_loader, model, optimizer, criterion, scaler, scheduler, iou_loss, dice_loss, train_losses, train_iou, train_dice_scores, elapsed_times, epoch, device, is_edge_needed):
+def train_fn(train_loader, model, optimizer, criterion, scaler, scheduler, iou_loss, train_losses, train_iou, elapsed_times, epoch, device):
     train_running_loss = 0.0
     train_dice_score = 0.0
     train_iou_score = 0.0
@@ -42,17 +40,15 @@ def train_fn(train_loader, model, optimizer, criterion, scaler, scheduler, iou_l
 
         train_running_loss += loss.item()
         train_iou_score += iou_loss(output, mask, sigmoid=True).item()
-        train_dice_score += dice_loss(output, mask, sigmoid=True).item()
     
     # update scheduler with the mean loss of the epoch
     scheduler.step(train_running_loss / len(train_loader))
     
     train_losses.append(train_running_loss / len(train_loader))
     train_iou.append(train_iou_score / len(train_loader))
-    train_dice_scores.append(train_dice_score / len(train_loader))
     elapsed_times.append(time() - start_time)
 
-def val_fn(val_loader, model, criterion, iou_loss, dice_loss, val_losses, val_iou, val_dice_scores, epoch, device, is_edge_needed):
+def val_fn(val_loader, model, criterion, iou_loss, val_losses, val_iou, epoch, device):
     val_running_loss = 0.0
     val_dice_score = 0.0
     val_iou_score = 0.0
@@ -61,7 +57,6 @@ def val_fn(val_loader, model, criterion, iou_loss, dice_loss, val_losses, val_io
     with torch.no_grad():
         for image, mask, edge in tqdm(val_loader, desc=f"Validation (epoch {epoch})"):
             image, mask = image.to(device=device, non_blocking=True), mask.to(device=device, non_blocking=True)
-            if is_edge_needed: edge = edge.to(device=device, non_blocking=True)
 
             # forward
             output = model(image)
@@ -69,48 +64,43 @@ def val_fn(val_loader, model, criterion, iou_loss, dice_loss, val_losses, val_io
 
             val_running_loss += loss.item()
             val_iou_score += iou_loss(output, mask, sigmoid=True).item()
-            val_dice_score += dice_loss(output, mask, sigmoid=True).item()
 
     val_losses.append(val_running_loss / len(val_loader))
     val_iou.append(val_iou_score / len(val_loader))
-    val_dice_scores.append(val_dice_score / len(val_loader))
 
-def fit(epochs:int, model, train_loader, val_loader, criterion:nn, optimizer:torch.optim, scheduler, epoch_val, device, is_edge_needed, wandb, wandb_table, model_name="UNet") -> dict:
+def fit(epochs:int, model, train_loader, val_loader, criterion:nn, optimizer:torch.optim, scheduler, epoch_val, device, wandb, wandb_table, model_name="UNet") -> dict:
     torch.cuda.empty_cache()
-    dice_loss, iou_loss, scaler = DiceLoss(), IoULoss(), GradScaler()
-    train_losses, val_losses, train_iou, val_iou, train_dices, val_dices, elapsed_times = [], [], [], [], [], [], []
+    iou_loss, scaler = IoULoss(), GradScaler()
+    train_losses, val_losses, train_iou, val_iou, elapsed_times = [], [], [], [], []
     min_loss, not_improved = np.inf, 0
 
 
     for epoch in range(epochs):
         epoch_val[0] += 1
 
-        train_fn(train_loader, model, optimizer, criterion, scaler, scheduler, iou_loss, dice_loss, train_losses, train_iou, train_dices, elapsed_times, epoch+1, device, is_edge_needed)
+        train_fn(train_loader, model, optimizer, criterion, scaler, scheduler, iou_loss, train_losses, train_iou, elapsed_times, epoch+1, device)
         
-        val_fn(val_loader, model, criterion, iou_loss, dice_loss, val_losses, val_iou, val_dices, epoch+1, device, is_edge_needed)
+        val_fn(val_loader, model, criterion, iou_loss, val_losses, val_iou, epoch+1, device)
 
-        log_epoch_info(epoch+1, epochs, epoch_val[0], model, wandb, wandb_table, train_losses, val_losses, train_iou, val_iou, train_dices, val_dices, elapsed_times, show_edge=is_edge_needed, device=device)
+        log_epoch_info(epoch+1, epochs, epoch_val[0], model, wandb, wandb_table, train_losses, val_losses, train_iou, val_iou, elapsed_times,  device=device)
         
         if (early_stopping(val_losses[-1], min_loss, not_improved, patience=5)[0]):
             break
 
         if epoch_val[0] % 5 == 0:
-            save_model(model, epoch_val[0], val_dices[-1], model_name=model_name)
+            save_model(model, epoch_val[0], val_iou[-1], model_name=model_name)
     
     if epoch_val[0] % 5 != 0:
-        save_model(model, epoch_val[0], val_dices[-1], model_name=model_name)
+        save_model(model, epoch_val[0], val_iou[-1], model_name=model_name)
     
-    history = { "epochs": list(range(1, epochs+1)), "train_losses": train_losses, "val_losses": val_losses, "train_dices": train_dices, "val_dices": val_dices }
+    history = { "epochs": list(range(1, epochs+1)), "train_losses": train_losses, "val_losses": val_losses }
     return history
 
-def finish_training(model, wandb_table, history):
+def finish_training(model, wandb_table):
     # Log the table to WandB
     wandb.log({"predictions": wandb_table})
 
     wandb.finish()
-
-    if history is not None:
-        plot_metrics(history, metrics={'Loss': 'losses', 'Dice': 'dices'})
 
     # empty the cache to avoid CUDA out of memory error
     torch.cuda.empty_cache()
@@ -133,8 +123,7 @@ def train_model(
         img_h=256,
         img_w=256,
         train_one_batch=False,
-        is_edge_needed=False,
-        model_name="fastvitwithfpn",
+        model_name="UNet",
         run_name="Run Name"
     ):
     model = model.to(device)
@@ -148,7 +137,7 @@ def train_model(
                name=run_name
     )
 
-    columns = ["ID", "Image", "Mask"] + (["Edge"] if is_edge_needed else []) + ["Prediction"]
+    columns = ["ID", "Image", "Mask", "Prediction"]
     wandb_table = wandb.Table(columns=columns)
 
     # Loss and optimizer
@@ -164,7 +153,7 @@ def train_model(
             train_one_batch(model, train_loader, optimizer, criterion, epochs=200, device=device) # (set a small batch size first)
         else:
             epoch_val = [0] # to keep track of the epoch number in case the fit function is called multiple times
-            history = fit(num_epochs, model, train_loader, val_loader, criterion, optimizer, scheduler, epoch_val, device, is_edge_needed, wandb, wandb_table, model_name=model_name)
+            history = fit(num_epochs, model, train_loader, val_loader, criterion, optimizer, scheduler, epoch_val, device, wandb, wandb_table, model_name=model_name)
     except KeyboardInterrupt:
         finish_training(model, wandb_table, history)
 
