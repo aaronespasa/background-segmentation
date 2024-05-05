@@ -5,4 +5,3 @@ from .dataloaders import setup_data_loaders
 from .onebatch import train_one_batch
 from .training import fit, train_model
 from .samples import get_sample
-from .mask_to_rgb import class_mask_to_rgb

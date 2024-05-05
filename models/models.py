@@ -3,7 +3,7 @@
 import segmentation_models_pytorch as smp
 
 ENCODER_LIST = [f"mit_b{i}" for i in range(6)] + ["resnet34"]
-DECODERS = {"fpn": smp.FPN, "unet": smp.Unet, "unet++": smp.UnetPlusPlus, "manet": smp.MAnet, "deeplabv3": smp.DeeDeepLabV3}
+DECODERS = {"fpn": smp.FPN, "unet": smp.Unet, "unet++": smp.UnetPlusPlus, "manet": smp.MAnet, "deeplabv3": smp.DeepLabV3}
 
 def get_model(encoder, decoder, encoder_weights_dataset="imagenet", num_classes=1, in_channels=3):
     """

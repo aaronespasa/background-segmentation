@@ -18,7 +18,6 @@ from .onebatch import train_one_batch
 
 def train_fn(train_loader, model, optimizer, criterion, scaler, scheduler, iou_loss, train_losses, train_iou, elapsed_times, epoch, device):
     train_running_loss = 0.0
-    train_dice_score = 0.0
     train_iou_score = 0.0
     start_time = time()
     
@@ -50,12 +49,11 @@ def train_fn(train_loader, model, optimizer, criterion, scaler, scheduler, iou_l
 
 def val_fn(val_loader, model, criterion, iou_loss, val_losses, val_iou, epoch, device):
     val_running_loss = 0.0
-    val_dice_score = 0.0
     val_iou_score = 0.0
     
     model.eval()
     with torch.no_grad():
-        for image, mask, edge in tqdm(val_loader, desc=f"Validation (epoch {epoch})"):
+        for image, mask in tqdm(val_loader, desc=f"Validation (epoch {epoch})"):
             image, mask = image.to(device=device, non_blocking=True), mask.to(device=device, non_blocking=True)
 
             # forward
@@ -73,7 +71,6 @@ def fit(epochs:int, model, train_loader, val_loader, criterion:nn, optimizer:tor
     iou_loss, scaler = IoULoss(), GradScaler()
     train_losses, val_losses, train_iou, val_iou, elapsed_times = [], [], [], [], []
     min_loss, not_improved = np.inf, 0
-
 
     for epoch in range(epochs):
         epoch_val[0] += 1
@@ -120,9 +117,9 @@ def train_model(
         batch_size,
         device,
         weight_decay=None,
-        img_h=256,
-        img_w=256,
-        train_one_batch=False,
+        img_h=512,
+        img_w=384,
+        train_one_batch_bool=False,
         model_name="UNet",
         run_name="Run Name"
     ):
@@ -130,7 +127,7 @@ def train_model(
 
     # Weights and biases initialization:
     os.environ.update({'WANDB_NOTEBOOK_NAME': 'training.ipynb'})
-    wandb.init(project="teeth-segmentation",
+    wandb.init(project="background-segmentation",
                entity="uc3m-ml",
                config={"learning_rate": learning_rate, "batch_size": batch_size, "epochs": num_epochs,
                        "model_name": model_name, "image_dims": f"{img_h}x{img_w}", "num_parameters(millions)": get_model_num_parameters(model),},
@@ -149,7 +146,7 @@ def train_model(
 
     history = None
     try: 
-        if train_one_batch:
+        if train_one_batch_bool:
             train_one_batch(model, train_loader, optimizer, criterion, epochs=200, device=device) # (set a small batch size first)
         else:
             epoch_val = [0] # to keep track of the epoch number in case the fit function is called multiple times

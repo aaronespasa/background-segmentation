@@ -1,6 +1,6 @@
 # pylint: disable=too-many-instance-attributes
 """
-PyTorch ADE20K dataset.
+PyTorch Dataset class for the Matting Human Small Dataset.
 """
 
 import torch
@@ -93,6 +93,7 @@ if __name__ == "__main__":
     
     # width: 600; height: 800
     # width: 384; height: 512
+    # [3, H:512, W:384]; [1, H:512, W:384]
     train_dataset = BackgroundDataset(DATA_FOLDER, "training", True, image_height=512, image_width=384)
 
     image, mask = train_dataset[0]

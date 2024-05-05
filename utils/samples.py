@@ -15,13 +15,15 @@ def get_sample(filename, split_set="validation", device=None, go_parent_folder=F
 
     image = np.array(Image.open(image_path).convert("RGB").resize((width, height)))
     mask = np.array(Image.open(mask_path).convert("L").resize((width, height)))
-    mask = (mask > 0).astype(np.uint8) * 255
+    mask = mask > 0
     matting = np.array(Image.open(mask_path).convert("RGB").resize((width, height)))
 
     image_input, mask_input = None, None
 
     if device is not None:
-        image_input = torch.tensor(image.astype(np.float32)).unsqueeze(0).to(device=device) # [N, C, H, W]
-        mask_input = torch.tensor(mask.astype(np.float32)).unsqueeze(0).to(device=device) # [N, C, H, W]
+        image_input = torch.tensor(image.astype(np.float32)).permute(2, 0, 1).unsqueeze(0).to(device=device) # [1, 3, H, W]
+        mask_input = torch.tensor(mask.astype(np.float32)).unsqueeze(0).unsqueeze(0).to(device=device) # [1, 1, H, W]
+
+    mask = mask.astype(np.uint8) * 255
 
     return image, mask, matting, image_input, mask_input

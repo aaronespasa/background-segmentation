@@ -7,19 +7,17 @@ from .samples import get_sample
 class OptData(TypedDict):
     images: torch.Tensor
     masks: torch.Tensor
-    edges: torch.Tensor
-
 
 def convert_to_plotimg(img: torch.Tensor) -> torch.Tensor:
     return img.permute(1, 2, 0).cpu().detach().numpy()
 
-def show_model_output(model, wandb, wandb_table, filename="1", device="cuda", opt_data:Union[OptData,None]=None, epoch_val=0):
+def show_model_output(model, wandb=None, wandb_table=None, filename="1", device="cuda", opt_data:Union[OptData,None]=None, epoch_val=0):
     if opt_data is not None:
         image, mask = opt_data["images"][0], opt_data["masks"][0]
-        plot_image, plot_mask = convert_to_plotimg(image), convert_to_plotimg(mask)
+        plot_image, plot_mask = convert_to_plotimg(image), convert_to_plotimg(plot_mask).squeeze(-1)
         image, mask = image.unsqueeze(0), mask.unsqueeze(0)
     else:
-        plot_image, plot_mask, plot_matting, image, mask = get_sample(filename, device=device)
+        plot_image, plot_mask, _, image, mask = get_sample(filename, device=device)
     
     model.eval()
     with torch.no_grad():
@@ -32,10 +30,11 @@ def show_model_output(model, wandb, wandb_table, filename="1", device="cuda", op
         imgs = [plot_image, plot_mask, output]
         titles = ["Image", "Mask", "Prediction"]
         
-        # Convert images to the format expected by WandB
-        wandb_imgs = [wandb.Image(np_img, caption=title) for np_img, title in zip(imgs, titles)]
-        row_data = [epoch_val] + wandb_imgs
-        wandb_table.add_data(*row_data)
+        if wandb is not None:
+            # Convert images to the format expected by WandB
+            wandb_imgs = [wandb.Image(np_img, caption=title) for np_img, title in zip(imgs, titles)]
+            row_data = [epoch_val] + wandb_imgs
+            wandb_table.add_data(*row_data)
         
         # Plot the images
         fig, axes = plt.subplots(1, len(imgs), figsize=(20, 10))

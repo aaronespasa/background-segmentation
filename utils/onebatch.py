@@ -6,7 +6,7 @@ import torch.nn.functional as F
 def train_one_batch(model, loader, optimizer, criterion, epochs=100, device="cuda"):
     """Train the model for one batch."""
     data = next(iter(loader))
-    images, masks, edges = data
+    images, masks = data
     images = images.to(device)
     masks = masks.to(device)
 
