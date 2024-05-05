@@ -19,7 +19,7 @@ def show_model_output(model, wandb, wandb_table, filename="1", device="cuda", op
         plot_image, plot_mask = convert_to_plotimg(image), convert_to_plotimg(mask)
         image, mask = image.unsqueeze(0), mask.unsqueeze(0)
     else:
-        plot_image, plot_mask, image, mask = get_sample(filename, device=device)
+        plot_image, plot_mask, plot_matting, image, mask = get_sample(filename, device=device)
     
     model.eval()
     with torch.no_grad():
