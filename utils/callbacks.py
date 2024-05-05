@@ -11,7 +11,7 @@ class OptData(TypedDict):
 def convert_to_plotimg(img: torch.Tensor) -> torch.Tensor:
     return img.permute(1, 2, 0).cpu().detach().numpy()
 
-def show_model_output(model, wandb=None, wandb_table=None, filename="1", device="cuda", opt_data:Union[OptData,None]=None, epoch_val=0):
+def show_model_output(model, wandb=None, wandb_table=None, filename="0", device="cuda", opt_data:Union[OptData,None]=None, epoch_val=0):
     if opt_data is not None:
         image, mask = opt_data["images"][0], opt_data["masks"][0]
         plot_image, plot_mask = convert_to_plotimg(image), convert_to_plotimg(plot_mask).squeeze(-1)
@@ -24,7 +24,6 @@ def show_model_output(model, wandb=None, wandb_table=None, filename="1", device=
         output = model(image)
 
         output = torch.sigmoid(output)
-        output = (output > 0.5).float()
         output = output[0].squeeze().detach().cpu().numpy()
 
         imgs = [plot_image, plot_mask, output]

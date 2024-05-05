@@ -44,10 +44,10 @@ class BackgroundDataset(Dataset):
         """
         return A.Compose([
             A.Resize(self.image_height, self.image_width),
-            # A.ShiftScaleRotate(shift_limit=0, scale_limit=-0.4, rotate_limit=0, p=0.5),
-            # A.HorizontalFlip(p=0.5),
-            # A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.2),
-            # A.GaussianBlur(p=0.2),
+            A.ShiftScaleRotate(shift_limit=0, scale_limit=-0.4, rotate_limit=45, p=0.5),
+            A.HorizontalFlip(p=0.5),
+            A.RandomBrightnessContrast(brightness_limit=0.2, contrast_limit=0.2, p=0.5),
+            A.GaussianBlur(p=0.2),
             ToTensorV2()
         ])
 

@@ -22,7 +22,7 @@ def log_epoch_info(epoch, num_epochs, epoch_val, model, wandb, wandb_table, trai
           sep="\n\t", end="\n\n")
     
     if epoch % 2 == 0:
-        show_model_output(model, wandb, wandb_table, filename="1", device=device, epoch_val=epoch_val)
+        show_model_output(model, wandb, wandb_table, filename="0", device=device, epoch_val=epoch_val)
     
     wandb.log({
         "epoch": epoch,
