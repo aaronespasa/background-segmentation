@@ -7,15 +7,11 @@
 $ python -m venv venv
 ```
 
-2.1. Activate the environment using Windows:
-```sh
-$ venv\Scripts\activate
-```
-
-2.2. Activate the environment using Linux or MacOS:
-```sh
-$ source venv/bin/activate
-```
+2. Activate the environment:
+   <ol type="a">
+     <li><b>UNIX-based OSs:</b> <code>source venv/bin/activate</code>.</li>
+     <li><b>Windows:</b> <code>.\venv\Scripts\activate</code>.</li>
+   </ol>
 
 3. Install PyTorch locally getting the commands from ([PyTorch - Get Started](https://pytorch.org/get-started/locally/)):
 ```sh
@@ -26,8 +22,6 @@ $ pip install torch torchvision torchaudio --index-url https://download.pytorch.
 ```sh
 $ pip install -r requirements.txt
 ```
-
-### Download the dataset, filter it, and process it
 
 ### Download the dataset, filter it, and process it
 
