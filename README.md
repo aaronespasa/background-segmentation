@@ -1,49 +1,74 @@
 # Background Segmentation
 
-## Set-Up Environment 🌲 
+## Set-Up Environment 🌲
+
 ### Install the necessary dependencies
-1. Create an environmental file:
-```sh
-$ python -m venv venv
-```
 
-2. Activate the environment:
-   <ol type="a">
-     <li><b>UNIX-based OSs:</b> <code>source venv/bin/activate</code>.</li>
-     <li><b>Windows:</b> <code>.\venv\Scripts\activate</code>.</li>
-   </ol>
+1. **Create a virtual environment**
+   ```sh
+   python -m venv venv
+   ```
 
-3. Install PyTorch locally getting the commands from ([PyTorch - Get Started](https://pytorch.org/get-started/locally/)):
-```sh
-$ pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-```
+2. **Activate the environment**
+   - **UNIX-based OSs:**
+     ```sh
+     source venv/bin/activate
+     ```
+   - **Windows:**
+     ```cmd
+     .\venv\Scripts\activate
+     ```
 
-4. Install the requirements:
-```sh
-$ pip install -r requirements.txt
-```
+3. **Install PyTorch**
+   - Visit the [PyTorch - Get Started](https://pytorch.org/get-started/locally/) page to get the correct installation commands for your setup.
+   - Example command (may vary based on your hardware and Python version):
+     ```sh
+     pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+     ```
 
-### Download the dataset, filter it, and process it
+4. **Install additional requirements**
+   ```sh
+   pip install -r requirements.txt
+   ```
 
-1. Create a Kaggle API Token following the instructions of [this video](https://www.youtube.com/watch?v=L-CzBRXefXY). This will create a "kaggle.json" file.
-2. Move this file to its appropriate location:
-   <ol type="a">
-     <li><b>UNIX-based OSs:</b> <code>~/.kaggle/kaggle.json</code>.</li>
-     <li><b>Windows:</b> <code>C:\Users\&lt;Windows-username&gt;\.kaggle\kaggle.json</code>.</li>
-   </ol>
-3. Then install the kaggle CLI:
-```bash
-pip install -q kaggle
-```
-4. Download the dataset:
-```bash
-kaggle datasets download -d aaronespasa/matting-human-small-dataset
-```
-5. Extract the dataset:
-   <ol type="a">
-     <li><b>UNIX-based OSs:</b> <code>./data.sh</code>.</li>
-     <li><b>Windows:</b> Open a Git Bash and then execute the following <code>./data.sh</code>.</li>
-   </ol>  
+### Download, filter, and process the dataset
 
-## Train the model 🛠
-The model can be trained by running the Jupyter Notebook `training.ipynb`.
+1. **Create a Kaggle API Token**
+   - Follow the instructions in [this video](https://www.youtube.com/watch?v=L-CzBRXefXY) to create a "kaggle.json" file.
+
+2. **Move the API Token to the appropriate location**
+   - **UNIX-based OSs:**
+     ```sh
+     mkdir -p ~/.kaggle && mv kaggle.json ~/.kaggle/
+     ```
+   - **Windows:**
+     ```cmd
+     move kaggle.json C:\Users\<Windows-username>\.kaggle\
+     ```
+
+3. **Install the Kaggle CLI**
+   ```sh
+   pip install -q kaggle
+   ```
+
+4. **Download and extract the dataset**
+   - **Download command:**
+     ```bash
+     kaggle datasets download -d aaronespasa/matting-human-small-dataset
+     ```
+   - **Extract the dataset:**
+     - **UNIX-based OSs:**
+       ```sh
+       ./data.sh
+       ```
+     - **Windows:**
+       ```cmd
+       ./data.sh  # Execute in Git Bash
+       ```
+
+## Train the Model 🛠
+
+- **Run the Jupyter Notebook:**
+  ```sh
+  jupyter notebook training.ipynb
+  ```
