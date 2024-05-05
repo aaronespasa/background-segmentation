@@ -13,18 +13,10 @@ import albumentations.augmentations.functional as F
 from albumentations.pytorch import ToTensorV2
 from torch.utils.data import Dataset
 
-# https://www.kaggle.com/datasets/humansintheloop/teeth-segmentation-on-dental-x-ray-images/data
-# "Teeth Segmentation PNG"/d2/img -> images listed with the extension *.jpg
-# "Teeth Segmentation PNG"/d2/masks_machine -> masks listed with the extension *.png
-# The name of the images and masks are the same, but the extension is different.
-# There are a total of 32 classe
-
-# 80% -> training -> 598 * 0.8 = 478
-# 15% -> validation -> 598 * 0.15 = 89
-# 5% -> testing -> 598 * 0.05 = 598 - 478 - 89 = 31
-class TeethDataset(Dataset):
+class BackgroundDataset(Dataset):
     """
-    PyTorch Teeth dataset.
+    PyTorch Dataset class for the following Kaggle dataset:
+    https://www.kaggle.com/datasets/aaronespasa/matting-human-small-dataset
     """
 
     def __init__(self, root_dir:str, split:str, transform:bool=True, image_height=512, image_width=256):
@@ -33,14 +25,13 @@ class TeethDataset(Dataset):
         :param transform (callable, optional): Optional transform to be applied on a sample.
         """
         [setattr(self, arg, value) for arg, value in locals().items() if arg != 'self'] # set the arguments as attributes
-        self.color_to_class = self._create_color_mapping()
         self._set_files()
 
     def _set_files(self):
         """Fill the list of files depending on the dataset type (split)"""
         if self.split in ["training", "validation"]:
-            self.images_dir = os.path.join(self.root_dir, "images", self.split)
-            self.masks_dir = os.path.join(self.root_dir, "annotations", self.split)
+            self.images_dir = os.path.join(self.root_dir, "original", self.split)
+            self.masks_dir = os.path.join(self.root_dir, "matting", self.split)
             self.files = [os.path.basename(path).split(".")[0] for path in glob(self.images_dir + "/*.jpg")]
             self.transformation = self.get_train_transformations() if self.split == "training" else self.get_val_transformations()
         else:
@@ -151,7 +142,7 @@ class TeethDataset(Dataset):
 if __name__ == "__main__":
     DATA_FOLDER = "data"
     
-    train_dataset = TeethDataset(DATA_FOLDER, "training", True, image_height=512, image_width=256)
+    train_dataset = BackgroundDataset(DATA_FOLDER, "training", True, image_height=512, image_width=256)
 
     # print the shape of a random image and its mask
     for i in range(400):
