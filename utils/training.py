@@ -93,7 +93,7 @@ def fit(epochs:int, model, train_loader, val_loader, criterion:nn, optimizer:tor
     history = { "epochs": list(range(1, epochs+1)), "train_losses": train_losses, "val_losses": val_losses }
     return history
 
-def finish_training(model, wandb_table):
+def finish_training(model, wandb_table, history):
     # Log the table to WandB
     wandb.log({"predictions": wandb_table})
 
