@@ -5,3 +5,4 @@ from .dataloaders import setup_data_loaders
 from .onebatch import train_one_batch
 from .training import fit, train_model
 from .samples import get_sample
+from .test import test_model

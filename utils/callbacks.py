@@ -14,7 +14,7 @@ def convert_to_plotimg(img: torch.Tensor) -> torch.Tensor:
 def show_model_output(model, wandb=None, wandb_table=None, filename="0", device="cuda", opt_data:Union[OptData,None]=None, epoch_val=0):
     if opt_data is not None:
         image, mask = opt_data["images"][0], opt_data["masks"][0]
-        plot_image, plot_mask = convert_to_plotimg(image), convert_to_plotimg(plot_mask).squeeze(-1)
+        plot_image, plot_mask = convert_to_plotimg(image), convert_to_plotimg(mask).squeeze(-1)
         image, mask = image.unsqueeze(0), mask.unsqueeze(0)
     else:
         plot_image, plot_mask, _, image, mask = get_sample(filename, device=device)
