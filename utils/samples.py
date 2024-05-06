@@ -24,6 +24,7 @@ def get_sample(filename, split_set="validation", device=None, go_parent_folder=F
         image_input = torch.tensor(image.astype(np.float32)).permute(2, 0, 1).unsqueeze(0).to(device=device) # [1, 3, H, W]
         mask_input = torch.tensor(mask.astype(np.float32)).unsqueeze(0).unsqueeze(0).to(device=device) # [1, 1, H, W]
 
+    image_input = image_input / 255.0
     mask = mask.astype(np.uint8) * 255
 
     return image, mask, matting, image_input, mask_input
