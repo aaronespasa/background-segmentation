@@ -2,7 +2,7 @@
 # Decoder: https://github.com/qubvel/segmentation_models.pytorch/blob/master/segmentation_models_pytorch/decoders/fpn/model.py
 import segmentation_models_pytorch as smp
 
-ENCODER_LIST = [f"mit_b{i}" for i in range(6)] + ["resnet50", "mobileone_s4", "efficientnet-b5"]
+ENCODER_LIST = [f"mit_b{i}" for i in range(6)] + ["resnet50", "mobileone_s4"]
 DECODERS = {"fpn": smp.FPN, "unet": smp.Unet, "manet": smp.MAnet, "deeplabv3": smp.DeepLabV3}
 
 def get_model(encoder, decoder, encoder_weights_dataset="imagenet", num_classes=1, in_channels=3):
